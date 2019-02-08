@@ -1,0 +1,60 @@
+---
+- name: "Create {{ install_prefix }} directory on target host(s)"
+  file:
+    state: directory
+    path: "{{ install_prefix }}"
+  become: true
+  tags: prometheus,mkdir
+
+- name: "Create persistent directories for goss test file"
+  file:
+    state: directory
+    path: "{{ item }}"
+    mode: 0777
+  with_items:
+    - "{{ install_prefix }}/goss"
+    - "{{ install_prefix }}/goss/test_ntp"
+  become: true
+  tags: goss,mkdir
+
+- name: Install required packages
+  package:
+    name: "{{ required_pkgs }}"
+    state: present
+    update_cache: true
+  become: true
+  tags: nginx,pkg
+
+- name: Unpack goss deployment archive
+  get_url:
+    url: "{{ deployment_archive_url_goss }}"
+    mode: 0755
+    dest: "{{ install_prefix }}"
+  become: true
+
+- name: Link unpacked goss to execution path
+  file:
+    state: link
+    src: "{{ install_prefix }}/goss-linux-amd64"
+    dest: /usr/local/bin/goss
+  become: true
+
+- name: Deploy base configuration template for Chrony-service
+  template:
+    src: chrony.conf
+    dest: /etc/chrony.conf
+  register: chrony_file_changed
+  become: true
+  notify:
+    - Service chronyd restart
+    - Wait sync with server
+    - Testing synchronised server
+    - Goss testing servers
+  tags: chrony,config
+
+
+- name: "Deploy base configuration template for Goss"
+  template:
+    src: "goss.yaml"
+    dest: "{{ goss_path_file }}"
+  tags: prometheus,template

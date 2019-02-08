@@ -1,0 +1,23 @@
+---
+- name: Service chronyd restart
+  systemd:
+    name: chronyd
+    state: restarted
+  listen: "restart web services"
+  become: true
+  when: chrony_file_changed.changed
+
+- name: Wait sync with server
+  pause:
+    seconds: 5
+  when: chrony_file_changed.changed
+
+- name: Testing synchronised server
+  shell: "chronyc -a tracking | grep Leap | awk '{print $4}'"
+  register: chr_out
+  changed_when: chr_out.stdout != "Normal"
+  failed_when: chr_out.stdout != "Normal"
+
+- name: Goss testing servers
+  command: "goss -g {{ goss_path_file }} validate --format tap"
+  changed_when: false

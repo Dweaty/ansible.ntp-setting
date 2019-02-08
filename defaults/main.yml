@@ -1,0 +1,12 @@
+---
+required_pkgs:
+  - chrony
+
+install_prefix: "/opt/ntp_client"
+
+ntp_server: ntp.ubuntu.com
+
+goss_path_file: "{{ install_prefix }}/goss/test_ntp/goss.yaml"
+
+software_version_goss: "0.3.6"
+deployment_archive_url_goss: "https://github.com/aelsabbahy/goss/releases/download/v{{ software_version_goss }}/goss-linux-amd64"

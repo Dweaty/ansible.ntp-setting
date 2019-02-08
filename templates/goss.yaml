@@ -1,0 +1,6 @@
+---
+service:
+  chronyd:
+    # required attributes
+    enabled: true
+    running: true
